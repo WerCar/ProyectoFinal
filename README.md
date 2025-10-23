@@ -86,3 +86,4 @@ El script de creación se encuentra en la carpeta /sql/Consulta inicial.sql.
 - finalizado – Consulta concluida.  
 - ausente – Paciente no se presentó.  
 
+(Rebuild Azure - test)
