@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Panel Recepción</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{ --bg:#0b0f14; --text:#e6edf3; --muted:#a9b4c0; --primary:#4f46e5; --accent:#22d3ee;
+      --glass:rgba(255,255,255,.06); --glass-strong:rgba(255,255,255,.12); --radius:18px; --shadow: 0 10px 30px rgba(0,0,0,.35); }
+    *{box-sizing:border-box}
+    body{ margin:0; background:#0b0f14; color:var(--text); font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background: radial-gradient(1200px 800px at 10% -10%, #0e1b2a 0%, transparent 60%),
+                  radial-gradient(900px 600px at 110% 10%, #111b2f 0%, transparent 60%),
+                  linear-gradient(180deg, #0a0f17, #0b0f14); min-height:100dvh; }
+    header{max-width:1200px;margin:22px auto 0;padding:0 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#7c3aed);box-shadow:0 10px 30px rgba(79,70,229,.35)}
+    .title{font-weight:800}
+    .muted{color:var(--muted)}
+    .btn, input, select{ background:var(--glass); border:1px solid rgba(255,255,255,.12); color:var(--text);
+      padding:10px 12px; border-radius:12px; outline:none; transition:.2s; font-weight:600 }
+    .btn{ cursor:pointer } .btn:hover{background:var(--glass-strong); transform:translateY(-1px)}
+    select option{ color:#0b0f14; background:#fff; }
+    main{max-width:1200px;margin:20px auto;padding:0 18px;display:grid;gap:18px}
+    .grid{ display:grid; grid-template-columns:1.1fr .9fr; gap:18px }
+    .card{ background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.03)); border:1px solid rgba(255,255,255,.12);
+      border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden }
+    .card h2{margin:0;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .content{padding:16px 18px}
+    .row{display:grid;grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:center}
+    .row-2{display:grid;grid-template-columns:1fr 1fr; gap:10px}
+    .row-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr; gap:10px}
+    .list{display:grid;gap:10px}
+    .item{display:grid;grid-template-columns:80px 1fr 1fr 140px; gap:10px; align-items:center;
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); padding:12px 14px; border-radius:12px}
+    .badge{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);font-weight:700}
+    .b-pend{background:rgba(255,255,255,.10)}
+    .b-llam{background:linear-gradient(135deg,#6366f1,#7c3aed);border-color:transparent}
+    .b-cons{background:linear-gradient(135deg,#0ea5e9,#10b981);border-color:transparent;color:#041015}
+    .disabled{ opacity:.55; pointer-events:none; }
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} .row-4{grid-template-columns:1fr 1fr} .item{grid-template-columns:64px 1fr 1fr 120px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <div class="title">Panel de Recepción</div>
+        <div class="muted" id="userInfo">—</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center">
+      <a class="btn" href="/">Volver a inicio</a>
+      <button class="btn" id="logout">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Registro de pacientes -->
+    <section class="card">
+      <h2>Registrar paciente</h2>
+      <div class="content">
+        <div class="row-4" style="margin-bottom:10px">
+          <input id="p_dpi" placeholder="DPI (opcional)">
+          <input id="p_nombre" placeholder="Nombre completo *">
+          <input id="p_edad" type="number" min="0" placeholder="Edad (opcional)">
+          <input id="p_tel" placeholder="Teléfono (opcional)">
+        </div>
+        <button class="btn" id="btnCrearPaciente">Crear paciente</button>
+        <div class="muted" style="margin-top:6px">Validación anti-duplicados: DPI único; si no hay DPI, combinación nombre+teléfono.</div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <!-- Crear turno -->
+      <section class="card">
+        <h2>Crear turno</h2>
+        <div class="content">
+          <div class="row-2" style="margin-bottom:10px">
+            <input id="buscarPaciente" placeholder="Buscar paciente por nombre/DPI/teléfono">
+            <select id="clinicaSel"></select>
+          </div>
+          <div id="resultados" class="list"></div>
+        </div>
+      </section>
+
+      <!-- Turnos recientes -->
+      <section class="card">
+        <h2>Turnos recientes</h2>
+        <div class="content">
+          <div id="turnosRecientes" class="list"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // ====== Auth & helpers ======
+    const token = localStorage.getItem('token');
+    const user  = JSON.parse(localStorage.getItem('user') || 'null');
+    const headers = { 'Content-Type':'application/json', ...(token? { Authorization:'Bearer '+token } : {}) };
+    const userInfo = document.getElementById('userInfo');
+
+    if (!token || !user || !['recepcion','triaje','admin'].includes((user.rol||'').toLowerCase())){
+      alert('Debe iniciar sesión como recepción, triaje o admin.');
+      location.href='/';
+    } else {
+      userInfo.textContent = `${user.nombre} — rol: ${user.rol}`;
+    }
+
+    document.getElementById('logout').onclick = ()=>{ localStorage.clear(); location.href='/' };
+
+    async function api(url, opts={}){
+      const res = await fetch(url, { ...opts, headers:{ ...headers, ...(opts.headers||{}) }});
+      const data = await res.json().catch(()=> ({}));
+      if (!res.ok) throw new Error(data.msg || 'Error');
+      return data;
+    }
+
+    // ====== DOM refs ======
+    const clinicaSel = document.getElementById('clinicaSel');
+    const buscarInput = document.getElementById('buscarPaciente');
+    const resultados = document.getElementById('resultados');
+    const turnosRecientes = document.getElementById('turnosRecientes');
+
+    // ====== Cargar clínicas (dinámico) ======
+    async function cargarClinicas(){
+      try{
+        const cs = await api('/api/clinicas');
+        const activas = cs.filter(c => !!c.activa);
+        clinicaSel.innerHTML = activas.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+        if (!clinicaSel.innerHTML) clinicaSel.innerHTML = '<option value="">— Sin clínicas activas —</option>';
+      }catch(e){
+        clinicaSel.innerHTML = `<option value="">Error al cargar clínicas</option>`;
+      }
+    }
+
+    // ====== Pacientes (libres hoy) ======
+    async function buscarPacientes(){
+      const q = buscarInput.value.trim();
+      const params = new URLSearchParams();
+      params.set('libres','1'); // 🔑 solo pacientes SIN turno activo hoy
+      if (q) params.set('q', q);
+
+      try{
+        const data = await api('/api/pacientes?' + params.toString(), { method:'GET' });
+        renderResultados(data);
+      }catch(e){
+        resultados.innerHTML = `<div class="muted">No se pudo cargar la lista: ${e.message}</div>`;
+      }
+    }
+
+    function renderResultados(items){
+      resultados.innerHTML = items.slice(0,25).map(p => `
+        <div class="item">
+          <div>#${p.id}</div>
+          <div>
+            ${p.nombre}
+            <div class="muted" style="font-weight:600">${p.dpi || 'sin DPI'} · ${p.telefono || 'sin teléfono'}</div>
+          </div>
+          <div>${p.edad ? (p.edad + ' años') : ''}</div>
+          <div><button class="btn" data-id="${p.id}">Crear turno</button></div>
+        </div>
+      `).join('') || '<div class="muted">Sin resultados (o todos con turno activo)</div>';
+
+      // wire up botones
+      resultados.querySelectorAll('button[data-id]').forEach(b=>{
+        b.addEventListener('click', ()=> crearTurno(Number(b.dataset.id)));
+      });
+    }
+
+    // ====== Crear turno ======
+    async function crearTurno(pacienteId){
+      try{
+        const cid = Number(clinicaSel.value);
+        if (!cid) return alert('Selecciona una clínica');
+        await api('/api/turnos', {
+          method:'POST',
+          body: JSON.stringify({ pacienteId, clinicaId: cid, prioridad: 0 })
+        });
+        await buscarPacientes();       // se oculta del listado (ya tiene turno activo hoy)
+        await cargarTurnosRecientes(); // refresco lateral
+        alert('Turno creado');
+      }catch(e){
+        alert(e.message);
+      }
+    }
+
+    // ====== Turnos recientes (público) ======
+    function estadoBadge(estado){
+      if (estado === 'llamando')   return '<span class="badge b-llam">Llamando</span>';
+      if (estado === 'en_consulta')return '<span class="badge b-cons">En consulta</span>';
+      return '<span class="badge b-pend">Pendiente</span>';
+    }
+
+    async function cargarTurnosRecientes(){
+      try{
+        // 🔧 endpoint correcto
+        const data = await (await fetch('/api/turnos/publico/universal')).json();
+        // solo activos (pendiente/llamando/en_consulta) ya viene filtrado desde el backend
+        const top = data.slice(0,10);
+        turnosRecientes.innerHTML = top.map(t => `
+          <div class="item">
+            <div>#${t.id}</div>
+            <div>
+              ${t.paciente}
+              <div class="muted">${t.clinica || ('Clínica ' + t.clinicaId)}</div>
+            </div>
+            <div>${estadoBadge(t.estado)}</div>
+            <div><span class="badge">${new Date(t.creadoEn).toLocaleString()}</span></div>
+          </div>
+        `).join('') || '<div class="muted">No hay turnos activos</div>';
+      }catch(e){
+        turnosRecientes.innerHTML = `<div class="muted">No se pudo cargar: ${e.message}</div>`;
+      }
+    }
+
+    // ====== Registro de paciente ======
+    document.getElementById('btnCrearPaciente').onclick = async ()=>{
+      try{
+        const body = {
+          dpi: document.getElementById('p_dpi').value.trim(),
+          nombre: document.getElementById('p_nombre').value.trim(),
+          edad: Number(document.getElementById('p_edad').value || 0) || null,
+          telefono: document.getElementById('p_tel').value.trim() || null
+        };
+        if (!body.nombre) return alert('Nombre es requerido');
+        const r = await api('/api/pacientes', { method:'POST', body: JSON.stringify(body) });
+        alert('Paciente creado: #' + r.id);
+        ['p_dpi','p_nombre','p_edad','p_tel'].forEach(id => document.getElementById(id).value = '');
+        await buscarPacientes();
+      }catch(e){ alert(e.message); }
+    };
+
+    // ====== Sockets (autorefresco) ======
+    const socket = io();
+    socket.on('turno:nuevo',   ()=>{ cargarTurnosRecientes(); buscarPacientes(); });
+    socket.on('turno:estado',  ()=>{ cargarTurnosRecientes(); buscarPacientes(); });
+    socket.on('turno:llamando',()=>{ cargarTurnosRecientes(); });
+
+    // Buscar en vivo
+    buscarInput.addEventListener('input', ()=>{ clearTimeout(window.__t); window.__t = setTimeout(buscarPacientes, 250); });
+
+    // ====== Init ======
+    (async function init(){
+      await cargarClinicas();
+      await buscarPacientes();
+      await cargarTurnosRecientes();
+    })();
+  </script>
+</body>
+</html>

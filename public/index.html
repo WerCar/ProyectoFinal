@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Sistema de Turnos — Acceso</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#0b0f14; --text:#e6edf3; --muted:#a9b4c0; --primary:#4f46e5; --accent:#22d3ee;
+      --glass:rgba(255,255,255,.06); --glass-strong:rgba(255,255,255,.12);
+      --radius:20px; --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 10% -10%, #0e1b2a 0%, transparent 60%),
+        radial-gradient(900px 600px at 110% 10%, #111b2f 0%, transparent 60%),
+        radial-gradient(1400px 900px at 50% 120%, #0b1322 0%, transparent 60%),
+        linear-gradient(180deg, #0a0f17, #0b0f14);
+    }
+
+    /* Fondo sutil */
+    .bg{ position:fixed; inset:0; pointer-events:none; z-index:-1; }
+    .blob{ position:absolute; border-radius:50%; filter: blur(40px); opacity:.45; mix-blend-mode: screen; animation: float 18s ease-in-out infinite; }
+    .b1{ width:600px; height:600px; left:-160px; top:-120px; background:radial-gradient(#3b82f6, transparent 60%); animation-delay:0s}
+    .b2{ width:500px; height:500px; right:-120px; top:80px; background:radial-gradient(#a78bfa, transparent 60%); animation-delay:3s}
+    .b3{ width:520px; height:520px; left:40%; bottom:-180px; background:radial-gradient(#22d3ee, transparent 60%); animation-delay:6s}
+    @keyframes float{ 0%,100%{ transform: translateY(0) translateX(0) scale(1)} 50%{ transform: translateY(-30px) translateX(20px) scale(1.05)} }
+
+    .wrap{ min-height:100dvh; display:grid; place-items:center; padding:24px }
+    .shell{ width:min(1100px,96vw); display:grid; grid-template-columns: 1.1fr .9fr; gap:24px; align-items:stretch }
+    @media (max-width: 900px){ .shell{ grid-template-columns: 1fr } }
+
+    .card{
+      padding:26px; border-radius: var(--radius);
+      background:linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.12); box-shadow:var(--shadow);
+    }
+    .hero .logo{ width:58px;height:58px;border-radius:16px; background:linear-gradient(135deg,var(--primary),#7c3aed); box-shadow:0 8px 30px rgba(79,70,229,.35)}
+    .row{ display:flex; gap:14px; align-items:center }
+    h1{ margin:0; font-size:clamp(24px,4vw,36px); font-weight:800; letter-spacing:.2px }
+    .muted{ color:var(--muted) }
+    .bullets{ margin-top:16px; display:grid; gap:10px }
+    .bullet{ display:flex; gap:10px; align-items:center; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); padding:10px 12px; border-radius:12px }
+
+    .loginTitle{ font-weight:800; margin-bottom:12px; display:flex; align-items:center; gap:10px }
+    .input, .btn{
+      width:100%; background:var(--glass); border:1px solid rgba(255,255,255,.12);
+      color:var(--text); padding:12px 14px; border-radius:14px; outline:none; transition:.2s
+    }
+    .btn{ font-weight:800; cursor:pointer; text-align:center; letter-spacing:.2px }
+    .btn:hover{ background:var(--glass-strong); transform: translateY(-1px) }
+    .btn-primary{ background: linear-gradient(135deg, var(--primary), #7c3aed); border-color: transparent }
+    .menu{ display:none; margin-top:18px }
+    .menu.active{ display:grid; gap:10px }
+    .link{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:12px 14px; border-radius:14px; background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12); text-decoration:none; color:var(--text); font-weight:800; letter-spacing:.2px
+    }
+    .logout{ display:none; margin-top:10px }
+    .logout.show{ display:block }
+
+    /* selects legibles */
+    select, .select { color: var(--text); }
+    select option, .select option { color: #0b0f14 !important; background:#ffffff !important; }
+  </style>
+</head>
+<body>
+  <div class="bg">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="shell">
+      <!-- Lado información -->
+      <section class="card hero">
+        <div class="row" style="margin-bottom:12px">
+          <div class="logo"></div>
+          <div>
+            <h1>Sistema de Turnos</h1>
+            <div class="muted">Acceso unificado por rol</div>
+          </div>
+        </div>
+        <div class="bullets">
+          <div class="bullet">• Recepción/Triaje: registra pacientes y asigna turnos.</div>
+          <div class="bullet">• Médico: llama, gestiona estados y finaliza.</div>
+          <div class="bullet">• TV: display universal con sonido y voz.</div>
+        </div>
+
+        <!-- Menú tras login -->
+        <div id="menu" class="menu" style="margin-top:18px">
+          <div id="saludo" class="muted"></div>
+          <a class="link" id="lnkRecep" href="/panel-recepcion.html">Recepción / Triaje <span>→</span></a>
+          <a class="link" id="lnkMed" href="/panel-medico.html">Panel Médico <span>→</span></a>
+          <a class="link" id="lnkTV" href="/display.html">Display Universal <span>→</span></a>
+          <a class="link" id="lnkAdmin" href="/admin.html" style="display:none">Administración <span>→</span></a>
+          <button id="logout1" class="btn logout">Cerrar sesión</button>
+        </div>
+      </section>
+
+      <!-- Lado login -->
+      <section class="card" id="loginBox">
+        <div class="loginTitle">Ingreso</div>
+        <div style="display:grid; gap:12px">
+          <input id="correo" class="input" placeholder="correo" autocomplete="username" />
+          <input id="password" class="input" type="password" placeholder="contraseña" autocomplete="current-password" />
+          <button id="loginBtn" class="btn btn-primary">Entrar</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // SIEMPRE mostrar login de entrada (no redirigir a admin automáticamente)
+    const menu = document.getElementById('menu');
+    const saludo = document.getElementById('saludo');
+    const lnkRecep = document.getElementById('lnkRecep');
+    const lnkMed = document.getElementById('lnkMed');
+    const lnkTV = document.getElementById('lnkTV');
+    const lnkAdmin = document.getElementById('lnkAdmin');
+    const logout1 = document.getElementById('logout1');
+
+    const loginBox = document.getElementById('loginBox');
+    const correo = document.getElementById('correo');
+    const password = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+
+    function showMenuByRole(role){
+      // Ocultar todos por defecto
+      lnkRecep.style.display = 'none';
+      lnkMed.style.display = 'none';
+      lnkTV.style.display = 'none';
+      lnkAdmin.style.display = 'none';
+
+      // Rol TV —> redirección directa a modo TV
+      if (role === 'tv') { window.location.href = '/display.html?tv=1'; return; }
+
+      if (role === 'medico') lnkMed.style.display='flex';
+      if (role === 'recepcion' || role === 'triaje') lnkRecep.style.display='flex';
+      if (role === 'admin'){
+        lnkRecep.style.display='flex';
+        lnkMed.style.display='flex';
+        lnkTV.style.display='flex';
+        lnkAdmin.style.display='flex';
+      }
+
+      menu.classList.add('active');
+      logout1.classList.add('show');
+    }
+
+    function onLogged(user){
+      saludo.textContent = `${user.nombre} — rol: ${user.rol}`;
+      // Mostramos menú, pero NO redirigimos automáticamente a admin
+      showMenuByRole(user.rol);
+    }
+
+    function logout(){
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Regresar a pantalla de login siempre
+      menu.classList.remove('active');
+      logout1.classList.remove('show');
+      document.getElementById('saludo').textContent = '';
+      window.location.href = '/';
+    }
+    logout1.onclick = logout;
+
+    loginBtn.onclick = async () => {
+      try{
+        const res = await fetch('/api/auth/login', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ correo: correo.value.trim(), password: password.value })
+        });
+        const data = await res.json();
+        if(!res.ok){ alert(data.msg || 'Credenciales inválidas'); return; }
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        // Ocultamos login y mostramos menú
+        loginBox.style.display = 'none';
+        onLogged(data.user);
+      }catch(e){ console.error(e); alert('Error de red'); }
+    };
+
+    // Si ya hay sesión guardada, mostramos menú pero mantenemos esta página (no redirigir a admin)
+    const u = localStorage.getItem('user');
+    if (u) {
+      loginBox.style.display = 'none';
+      onLogged(JSON.parse(u));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Administración — Sistema de Turnos</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#0b0f14; --text:#e6edf3; --muted:#a9b4c0;
+      --primary:#4f46e5; --accent:#22d3ee; --ok:#10b981; --warn:#f59e0b; --danger:#ef4444;
+      --glass:rgba(255,255,255,.06); --glass2:rgba(255,255,255,.03);
+      --shadow:0 14px 40px rgba(0,0,0,.35); --radius:20px; --line:rgba(255,255,255,.12);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 10% -10%, #0e1b2a 0%, transparent 60%),
+        radial-gradient(900px 600px at 110% 10%, #111b2f 0%, transparent 60%),
+        radial-gradient(1400px 900px at 50% 120%, #0b1322 0%, transparent 60%),
+        linear-gradient(180deg, #0a0f17, #0b0f14);
+    }
+    header{
+      max-width:1200px;margin:18px auto 0;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px
+    }
+    .brand{display:flex;gap:12px;align-items:center}
+    .mark{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--primary),#7c3aed);box-shadow:0 10px 30px rgba(79,70,229,.35)}
+    .title{font-weight:800; font-size: clamp(18px, 2.2vw, 26px)}
+    .muted{color:var(--muted)}
+    .nav{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .btn{
+      background:var(--glass); border:1px solid var(--line); color:var(--text);
+      padding:10px 12px; border-radius:12px; font-weight:800; cursor:pointer; transition:.2s; text-decoration:none
+    }
+    .btn:hover{ background:rgba(255,255,255,.12); transform:translateY(-1px) }
+    .btn-primary{ background: linear-gradient(135deg,#6366f1,#7c3aed); border-color:transparent }
+    .btn-ok{ background: linear-gradient(135deg,#0ea5e9,#10b981); border-color:transparent; color:#041015 }
+    .btn-warn{ background: linear-gradient(135deg,#f59e0b,#ef4444); border-color:transparent }
+
+    main{ max-width:1200px; margin:18px auto 28px; padding:0 16px; display:grid; gap:16px }
+
+    .tabs{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+    .tab{ padding:10px 14px; border-radius:999px; border:1px solid var(--line); background:var(--glass); cursor:pointer; font-weight:800 }
+    .tab.active{ background: linear-gradient(135deg,#6366f1,#7c3aed); border-color:transparent }
+
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:16px }
+    @media (max-width: 1000px){ .grid{ grid-template-columns: 1fr } }
+
+    .card{ background: linear-gradient(145deg,var(--glass),var(--glass2)); border:1px solid var(--line); border-radius: var(--radius); box-shadow:var(--shadow); overflow:hidden }
+    .card h2{ margin:0; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.08); font-size:18px }
+    .content{ padding:14px 14px 16px }
+
+    .form{ display:grid; gap:12px }
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px }
+    @media (max-width: 720px){ .row{ grid-template-columns: 1fr } }
+
+    input, select{
+      width:100%; background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--text);
+      padding:12px 14px; border-radius:14px; outline:none; font-weight:600
+    }
+    select option{ color:#0b0f14 !important; background:#ffffff !important; }
+    label{ font-size:13px; color:var(--muted); font-weight:700 }
+    .hint{ color:var(--muted); font-size:12px }
+
+    /* ===== Tabla con columna de Acciones fija y alineada ===== */
+    .table{ display:block; overflow-x:auto }
+    /* 5 columnas: ID | Nombre | Correo | Rol | Acciones */
+    .thead, .trow{
+      display:grid;
+      grid-template-columns: 80px minmax(220px,1.1fr) minmax(260px,1.3fr) 160px 300px;
+      gap:12px; align-items:center; padding:12px; border-radius:14px; min-width: 1060px;
+    }
+    .thead{ background:rgba(255,255,255,.08); border:1px solid var(--line); font-weight:800 }
+    .trow{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08) }
+
+    .cell{ min-width:0; display:flex; align-items:center; gap:10px }
+    .editable{
+      min-width:0; width:100%; padding:10px 12px; border-radius:12px;
+      border:1px dashed transparent; background:rgba(255,255,255,.04);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .editable:focus{ border-color: rgba(255,255,255,.35); outline:none; background:rgba(255,255,255,.06) }
+
+    .actions{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap }
+    .chip{ display:inline-block; padding:6px 10px; border-radius:999px; font-weight:800; border:1px solid var(--line); background:rgba(255,255,255,.06) }
+    .chip.on{ background: linear-gradient(135deg,#0ea5e9,#10b981); color:#041015; border-color:transparent }
+    .chip.off{ background: linear-gradient(135deg,#f59e0b,#ef4444) }
+
+    .alert{ background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.35); color:#fecaca; padding:10px 12px; border-radius:10px }
+
+    @media (max-width: 920px){
+      .thead, .trow{ min-width: 900px }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <div class="title">Administración</div>
+        <div class="muted" id="who"></div>
+      </div>
+    </div>
+    <div class="nav">
+      <a class="btn" href="/">Inicio</a>
+      <button id="logout" class="btn">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab active" data-tab="usuarios">Usuarios</button>
+      <button class="tab" data-tab="clinicas">Clínicas</button>
+    </div>
+
+    <!-- USUARIOS -->
+    <section id="tab-usuarios">
+      <div class="grid">
+        <div class="card">
+          <h2>Crear usuario</h2>
+          <div class="content">
+            <div class="form">
+              <div class="row">
+                <div>
+                  <label>Nombre</label>
+                  <input id="uNombre" placeholder="Nombre completo" />
+                </div>
+                <div>
+                  <label>Correo</label>
+                  <input id="uCorreo" type="email" placeholder="correo@ejemplo.com" />
+                </div>
+              </div>
+              <div class="row">
+                <div>
+                  <label>Contraseña</label>
+                  <input id="uPass" type="password" placeholder="mín. 8 caracteres" />
+                </div>
+                <div>
+                  <label>Rol</label>
+                  <select id="uRol">
+                    <option value="recepcion">recepcion</option>
+                    <option value="medico">medico</option>
+                    <option value="tv">tv</option>
+                    <option value="admin">admin</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <button id="btnCrearUsuario" class="btn btn-primary">Crear usuario</button>
+              </div>
+              <div class="hint">El usuario se crea <b>activo</b> por defecto.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Usuarios registrados</h2>
+          <div class="content">
+            <div id="errUsuarios" class="alert" style="display:none"></div>
+            <div class="table">
+              <div class="thead">
+                <div>ID</div><div>Nombre</div><div>Correo</div><div>Rol</div><div>Acciones</div>
+              </div>
+              <div id="tablaUsuarios"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLÍNICAS -->
+    <section id="tab-clinicas" style="display:none">
+      <div class="grid">
+        <div class="card">
+          <h2>Crear clínica</h2>
+          <div class="content">
+            <div class="form">
+              <div class="row">
+                <div>
+                  <label>Nombre</label>
+                  <input id="cNombre" placeholder="Ej. Clínica 5 — Dermatología" />
+                </div>
+                <div>
+                  <label>Activa</label>
+                  <select id="cActiva">
+                    <option value="1" selected>Sí</option>
+                    <option value="0">No</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <button id="btnCrearClinica" class="btn btn-ok">Crear clínica</button>
+              </div>
+              <div class="hint">Las clínicas activas aparecen en Recepción y Médico.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Clínicas</h2>
+          <div class="content">
+            <div id="errClinicas" class="alert" style="display:none"></div>
+            <div class="table">
+              <div class="thead">
+                <div>ID</div><div>Nombre</div><div>Estado</div><div>Cambiar estado</div><div>Acciones</div>
+              </div>
+              <div id="tablaClinicas"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Guardia admin
+    const token = localStorage.getItem('token') || '';
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const who = document.getElementById('who');
+    if (!token || !user || (user.rol || '').toLowerCase() !== 'admin') {
+      alert('Acceso restringido: solo administradores.');
+      location.href = '/';
+    } else {
+      who.textContent = user.nombre + ' — rol: ' + user.rol;
+    }
+    document.getElementById('logout').onclick = ()=>{ localStorage.clear(); location.href='/'; };
+
+    async function api(url, opts={}) {
+      const headers = { 'Content-Type':'application/json', ...(opts.headers||{}) };
+      if (token) headers.Authorization = 'Bearer ' + token;
+      const res = await fetch(url, { ...opts, headers });
+      let data = null;
+      try { data = await res.json(); } catch(_){}
+      if (!res.ok) throw new Error((data && data.msg) || 'Error');
+      return data;
+    }
+
+    // Tabs
+    const tabs = document.querySelectorAll('.tab');
+    const secUsuarios = document.getElementById('tab-usuarios');
+    const secClinicas = document.getElementById('tab-clinicas');
+    tabs.forEach(t=>{
+      t.addEventListener('click', ()=>{
+        tabs.forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        const id = t.dataset.tab;
+        secUsuarios.style.display = (id==='usuarios') ? '' : 'none';
+        secClinicas.style.display = (id==='clinicas') ? '' : 'none';
+      });
+    });
+
+    // USUARIOS
+    const uNombre = document.getElementById('uNombre');
+    const uCorreo = document.getElementById('uCorreo');
+    a = document.getElementById
+    const uPass = document.getElementById('uPass');
+    const uRol = document.getElementById('uRol');
+    const tablaUsuarios = document.getElementById('tablaUsuarios');
+    const errUsuarios = document.getElementById('errUsuarios');
+
+    document.getElementById('btnCrearUsuario').addEventListener('click', async ()=>{
+      const nombre = uNombre.value.trim();
+      const correo = uCorreo.value.trim();
+      const password = uPass.value;
+      const rol = uRol.value;
+      if (!nombre || !correo || !password) return alert('Completa los campos obligatorios.');
+      try{
+        await api('/api/auth/register', { method:'POST', body: JSON.stringify({ nombre, correo, password, rol }) });
+        uNombre.value = ''; uCorreo.value = ''; uPass.value = ''; uRol.value = 'recepcion';
+        await cargarUsuarios();
+        alert('Usuario creado');
+      }catch(e){ alert(e.message); }
+    });
+
+    async function cargarUsuarios(){
+      try{
+        errUsuarios.style.display = 'none';
+        const lista = await api('/api/usuarios');
+        tablaUsuarios.innerHTML = lista.map(u=>{
+          return `
+            <div class="trow" data-id="${u.id}">
+              <div class="cell">#${u.id}</div>
+              <div class="cell">
+                <div class="editable" contenteditable="true" data-field="nombre" title="Editar nombre">${u.nombre||''}</div>
+              </div>
+              <div class="cell">
+                <div class="editable" contenteditable="true" data-field="correo" title="Editar correo">${u.correo||''}</div>
+              </div>
+              <div class="cell">
+                <select class="sel-rol">
+                  <option value="recepcion" ${u.rol==='recepcion'?'selected':''}>recepcion</option>
+                  <option value="medico" ${u.rol==='medico'?'selected':''}>medico</option>
+                  <option value="tv" ${u.rol==='tv'?'selected':''}>tv</option>
+                  <option value="admin" ${u.rol==='admin'?'selected':''}>admin</option>
+                </select>
+              </div>
+              <div class="cell actions">
+                <button class="btn btn-ok btn-guardar">Guardar</button>
+                <button class="btn btn-primary btn-toggle">${u.activo?'Desactivar':'Activar'}</button>
+                <button class="btn btn-warn btn-eliminar">Eliminar</button>
+              </div>
+            </div>
+          `;
+        }).join('') || '<div class="muted">Sin usuarios</div>';
+
+        tablaUsuarios.querySelectorAll('.btn-guardar').forEach(btn=>{
+          btn.addEventListener('click', async ()=>{
+            const row = btn.closest('.trow');
+            const id = Number(row.dataset.id);
+            const nombre = row.querySelector('[data-field="nombre"]').textContent.trim();
+            const correo = row.querySelector('[data-field="correo"]').textContent.trim();
+            const rol = row.querySelector('.sel-rol').value;
+            try{
+              await api(`/api/usuarios/${id}`, { method:'PATCH', body: JSON.stringify({ nombre, correo, rol }) });
+              alert('Usuario actualizado');
+              await cargarUsuarios();
+            }catch(e){ alert(e.message); }
+          });
+        });
+
+        tablaUsuarios.querySelectorAll('.btn-toggle').forEach(btn=>{
+          btn.addEventListener('click', async ()=>{
+            const row = btn.closest('.trow');
+            const id = Number(row.dataset.id);
+            try{
+              await api(`/api/usuarios/${id}/toggle`, { method:'PATCH' });
+              await cargarUsuarios();
+            }catch(e){ alert(e.message); }
+          });
+        });
+
+        tablaUsuarios.querySelectorAll('.btn-eliminar').forEach(btn=>{
+          btn.addEventListener('click', async ()=>{
+            const row = btn.closest('.trow');
+            const id = Number(row.dataset.id);
+            if (!confirm('¿Eliminar definitivamente este usuario? (Recomendado desactivar)')) return;
+            try{
+              await api(`/api/usuarios/${id}`, { method:'DELETE' });
+              await cargarUsuarios();
+            }catch(e){ alert(e.message); }
+          });
+        });
+
+      }catch(e){
+        errUsuarios.textContent = e.message || 'Error cargando usuarios';
+        errUsuarios.style.display = 'block';
+      }
+    }
+
+    // CLÍNICAS
+    const cNombre = document.getElementById('cNombre');
+    const cActiva = document.getElementById('cActiva');
+    const tablaClinicas = document.getElementById('tablaClinicas');
+    const errClinicas = document.getElementById('errClinicas');
+
+    document.getElementById('btnCrearClinica').addEventListener('click', async ()=>{
+      const nombre = cNombre.value.trim();
+      const activa = cActiva.value === '1';
+      if (!nombre) return alert('El nombre es obligatorio.');
+      try{
+        await api('/api/clinicas', { method:'POST', body: JSON.stringify({ nombre, activa }) });
+        cNombre.value = ''; cActiva.value = '1';
+        await cargarClinicas();
+        alert('Clínica creada');
+      }catch(e){ alert(e.message); }
+    });
+
+    async function cargarClinicas(){
+      try{
+        errClinicas.style.display = 'none';
+        const lista = await api('/api/clinicas');
+        tablaClinicas.innerHTML = lista.map(c=>{
+          return `
+            <div class="trow" data-id="${c.id}">
+              <div class="cell">#${c.id}</div>
+              <div class="cell">
+                <div class="editable" contenteditable="true" data-field="nombre" title="Editar nombre">${c.nombre}</div>
+              </div>
+              <div class="cell">
+                <span class="chip ${c.activa?'on':'off'}">${c.activa?'Activa':'Inactiva'}</span>
+              </div>
+              <div class="cell">
+                <select class="sel-activa">
+                  <option value="1" ${c.activa?'selected':''}>Activa</option>
+                  <option value="0" ${!c.activa?'selected':''}>Inactiva</option>
+                </select>
+              </div>
+              <div class="cell actions">
+                <button class="btn btn-ok btn-guardar-clinica">Guardar</button>
+                <button class="btn btn-warn btn-eliminar-clinica">Eliminar</button>
+              </div>
+            </div>
+          `;
+        }).join('') || '<div class="muted">Sin clínicas</div>';
+
+        tablaClinicas.querySelectorAll('.btn-guardar-clinica').forEach(btn=>{
+          btn.addEventListener('click', async ()=>{
+            const row = btn.closest('.trow');
+            const id = Number(row.dataset.id);
+            const nombre = row.querySelector('[data-field="nombre"]').textContent.trim();
+            const activa = row.querySelector('.sel-activa').value === '1';
+            try{
+              await api(`/api/clinicas/${id}`, { method:'PATCH', body: JSON.stringify({ nombre, activa }) });
+              await cargarClinicas();
+              alert('Clínica actualizada');
+            }catch(e){ alert(e.message); }
+          });
+        });
+
+        tablaClinicas.querySelectorAll('.btn-eliminar-clinica').forEach(btn=>{
+          btn.addEventListener('click', async ()=>{
+            const row = btn.closest('.trow');
+            const id = Number(row.dataset.id);
+            if (!confirm('¿Desactivar esta clínica? (Recomendado en lugar de eliminar)')) return;
+            try{
+              await api(`/api/clinicas/${id}`, { method:'DELETE' });
+              await cargarClinicas();
+            }catch(e){ alert(e.message); }
+          });
+        });
+
+      }catch(e){
+        errClinicas.textContent = e.message || 'Error cargando clínicas';
+        errClinicas.style.display = 'block';
+      }
+    }
+
+    // Init
+    (async function init(){
+      await Promise.all([cargarUsuarios(), cargarClinicas()]);
+    })();
+  </script>
+</body>
+</html>

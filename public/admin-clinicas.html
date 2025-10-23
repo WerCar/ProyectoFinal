@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Admin · Clínicas</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#0b0f14; --text:#e6edf3; --muted:#a9b4c0; --glass:rgba(255,255,255,.06); --glass2:rgba(255,255,255,.12); --accent:#22d3ee; --primary:#4f46e5; --radius:16px }
+    *{box-sizing:border-box}
+    body{margin:0;background:#0b0f14;color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;min-height:100dvh;
+      background: radial-gradient(1200px 800px at 10% -10%, #0e1b2a 0%, transparent 60%), radial-gradient(900px 600px at 110% 10%, #111b2f 0%, transparent 60%), linear-gradient(180deg, #0a0f17, #0b0f14);}
+    header{max-width:1100px;margin:26px auto 0;padding:0 18px;display:flex;justify-content:space-between;align-items:center}
+    .title{font-weight:800}
+    .btn{background:var(--glass);border:1px solid var(--glass2);color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer}
+    .btn:hover{background:rgba(255,255,255,.1)}
+    input,select{background:var(--glass);border:1px solid rgba(255,255,255,.12);color:var(--text);padding:10px 12px;border-radius:12px;outline:none}
+    select option{ color:#0b0f14; background:#fff; }
+    main{max-width:1100px;margin:20px auto;padding:0 18px;display:grid;gap:16px}
+    .card{background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:16px}
+    .row{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center}
+    .row.head{opacity:.8;font-weight:600}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+<header>
+  <div class="title">Administrador · Clínicas</div>
+  <div>
+    <a class="btn" href="/">Inicio</a>
+    <button class="btn" id="logout">Cerrar sesión</button>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h3>Nueva clínica</h3>
+    <div class="row" style="margin-top:10px">
+      <input id="nombre" placeholder="Nombre de la clínica">
+      <button class="btn" id="crear">Crear</button>
+      <div class="muted">Las clínicas activas aparecen en Recepción y Panel Médico.</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>Listado</h3>
+    <div class="row head" style="margin-top:10px;margin-bottom:6px">
+      <div>Nombre</div><div>Activa</div><div>Acciones</div><div></div>
+    </div>
+    <div id="lista" style="display:grid;gap:10px"></div>
+  </section>
+</main>
+
+<script>
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user')||'null');
+  if (!token || !user || user.rol!=='admin'){ alert('Solo admin'); location.href='/'; }
+
+  document.getElementById('logout').onclick = ()=>{ localStorage.clear(); location.href='/'; };
+
+  async function api(url, opts={}){
+    const headers = { 'Content-Type':'application/json', 'Authorization':'Bearer '+token, ...(opts.headers||{}) };
+    const res = await fetch(url, { ...opts, headers });
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok) throw new Error(data.msg || 'Error');
+    return data;
+  }
+
+  async function crear(){
+    const nombre = document.getElementById('nombre').value.trim();
+    if (!nombre) return alert('Nombre requerido');
+    await api('/api/clinicas', { method:'POST', body: JSON.stringify({ nombre, activa:true }) });
+    document.getElementById('nombre').value='';
+    await cargar();
+  }
+  document.getElementById('crear').onclick = crear;
+
+  function fila(c){
+    return `
+      <div class="row">
+        <div><input value="${c.nombre}" data-id="${c.id}" class="edit" style="width:100%"></div>
+        <div>
+          <select class="act" data-id="${c.id}">
+            <option value="1" ${c.activa?'selected':''}>Activa</option>
+            <option value="0" ${!c.activa?'selected':''}>Inactiva</option>
+          </select>
+        </div>
+        <div><button class="btn" onclick="guardar(${c.id})">Guardar</button></div>
+        <div></div>
+      </div>
+    `;
+  }
+
+  async function cargar(){
+    const data = await api('/api/clinicas');
+    document.getElementById('lista').innerHTML = data.map(fila).join('');
+  }
+
+  window.guardar = async (id)=>{
+    const nombre = document.querySelector(`.edit[data-id="${id}"]`).value.trim();
+    const activa = document.querySelector(`.act[data-id="${id}"]`).value === '1';
+    await api('/api/clinicas/'+id, { method:'PATCH', body: JSON.stringify({ nombre, activa }) });
+    await cargar();
+  };
+
+  cargar();
+</script>
+</body>
+</html>

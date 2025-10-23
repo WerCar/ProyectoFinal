@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Display de Turnos — Universal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#0b0f14; --text:#e6edf3; --muted:#a9b4c0;
+      --primary:#4f46e5; --accent:#22d3ee; --ok:#10b981; --warn:#f59e0b;
+      --glass:rgba(255,255,255,.06); --glass-2:rgba(255,255,255,.03);
+      --line:#1c2433; --shadow:0 14px 40px rgba(0,0,0,.35); --radius:20px;
+      --s-pend:#64748b; --s-llam:#6366f1; --s-cons:#10b981;
+    }
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 10% -10%, #0e1b2a 0%, transparent 60%),
+        radial-gradient(900px 600px at 110% 10%, #111b2f 0%, transparent 60%),
+        radial-gradient(1400px 900px at 50% 120%, #0b1322 0%, transparent 60%),
+        linear-gradient(180deg, #0a0f17, #0b0f14);
+      overflow-x:hidden;
+    }
+
+    header{
+      max-width: 1500px; margin: 18px auto 0; padding: 0 20px;
+      display:flex; align-items:center; justify-content:flex-end; gap:10px;
+    }
+    .btn{
+      background:var(--glass); border:1px solid rgba(255,255,255,.12); color:var(--text);
+      padding:10px 12px; border-radius:12px; font-weight:800; letter-spacing:.3px; cursor:pointer; transition:.2s; font-size:14px;
+    }
+    .btn:hover{ background:rgba(255,255,255,.12); transform: translateY(-1px) }
+    .pill{ display:flex; gap:10px; align-items:center; border-radius:999px; padding:10px 14px;
+      background:linear-gradient(135deg,rgba(36,49,77,.55),rgba(21,25,40,.55)); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(12px); font-weight:800 }
+    .dot{ width:10px;height:10px;border-radius:50%; background: radial-gradient(circle at 30% 30%, #7cffd3, #06b6d4); box-shadow:0 0 16px rgba(34,211,238,.7); }
+
+    .container{ max-width:1500px; margin:18px auto 24px; padding:0 20px; display:grid; gap:22px; }
+
+    .hero{ display:grid; grid-template-columns: 1.15fr .85fr; gap:22px; }
+    .card{
+      background:linear-gradient(145deg,var(--glass),var(--glass-2));
+      border:1px solid rgba(255,255,255,.12); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
+    }
+    .hero-left{
+      position:relative; padding:24px; display:grid; align-content:center; gap:10px;
+      min-height: 220px;
+      background:linear-gradient(120deg, rgba(34,211,238,.12), rgba(79,70,229,.22)), rgba(255,255,255,.02);
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .turno{
+      font-weight:900; letter-spacing:.6px;
+      font-size: clamp(46px, 8.5vw, 120px);
+      line-height: 0.98;
+      background: linear-gradient(135deg, #e6edf3, #a7b5ff);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      text-shadow: 0 10px 28px rgba(99,102,241,.25);
+    }
+    .clinica{ margin-top:8px; font-weight:800; color:#c6d3ff; font-size: clamp(18px, 2.6vw, 30px); }
+    .llam-time{ color:var(--muted); font-weight:700; font-size: clamp(12px,1.6vw,16px) }
+
+    .kpis{ display:grid; gap:14px; grid-template-columns: repeat(3, 1fr); padding:20px; align-content:center }
+    .kpi{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:16px; text-align:center; }
+    .kpi .num{ font-size: clamp(26px, 4.5vw, 46px); font-weight:900 }
+    .kpi .lbl{ color:var(--muted); font-weight:700; font-size: clamp(12px, 1.6vw, 16px) }
+
+    .columns{ display:grid; grid-template-columns: 1fr 1fr; gap:22px }
+    .section{
+      background:linear-gradient(145deg,var(--glass),var(--glass-2));
+      border:1px solid rgba(255,255,255,.12); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
+    }
+    .section-head{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px;
+      border-bottom:1px solid rgba(255,255,255,.08); font-weight:900; letter-spacing:.2px; font-size: clamp(14px, 2vw, 20px);
+    }
+    .count{ color:var(--muted); font-weight:800 }
+    .table{ padding:16px; display:grid; gap:14px }
+
+    .row{
+      display:grid; grid-template-columns: 16px 140px 1fr 260px; gap:14px; align-items:center;
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+      padding:14px 16px; border-radius:16px; transition:.15s; font-size: clamp(16px, 2vw, 22px);
+    }
+    .band{ width:16px; height:100%; border-radius:10px }
+    .band.pend{ background: var(--s-pend) }
+    .band.llam{ background: var(--s-llam) }
+    .band.cons{ background: var(--s-cons) }
+
+    .turno-id{ color:#cbd5e1; font-weight:900 }
+    .paciente{ font-weight:800 }
+    .clin{ color:#c6d3ff; font-weight:700 }
+    .badge{
+      justify-self:end; display:inline-block; padding:8px 12px; border-radius:999px; font-weight:900;
+      border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06);
+    }
+    .b-pend{ color:#cbd5e1 }
+    .b-llam{ background: linear-gradient(135deg, var(--primary), #7c3aed); color:white; border-color:transparent }
+
+    @media (max-width: 1200px){
+      .hero{ grid-template-columns: 1fr }
+      .columns{ grid-template-columns: 1fr }
+    }
+    @media (max-width: 680px){
+      header{ justify-content:center }
+      .row{ grid-template-columns: 12px 110px 1fr; }
+      .badge{ display:none }
+      .clin{ display:none }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="voiceBtn" class="btn">Voz: ON</button>
+    <button id="fsBtn" class="btn">Pantalla completa</button>
+    <div class="pill"><div class="dot"></div><div>En línea</div></div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="card hero-left">
+        <div class="llam-time" id="callTime">—</div>
+        <div class="turno" id="callTurno">—</div>
+        <div class="clinica" id="callClinica">Clínica —</div>
+      </div>
+
+      <div class="card">
+        <div class="kpis">
+          <div class="kpi"><div class="num" id="kpiLlam">0</div><div class="lbl">Llamando</div></div>
+          <div class="kpi"><div class="num" id="kpiPend">0</div><div class="lbl">Pendientes</div></div>
+          <div class="kpi"><div class="num" id="kpiCons">0</div><div class="lbl">En consulta</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="columns">
+      <div class="section">
+        <div class="section-head">
+          <div>Próximos en pasar</div>
+          <div class="count"><span id="cntNext">0</span></div>
+        </div>
+        <div class="table" id="nextList"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <div>Llamados a clínica</div>
+          <div class="count"><span id="cntLlam">0</span></div>
+        </div>
+        <div class="table" id="listLlam"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // ---- Modo TV (?tv=1) opcional
+    const isTV = new URLSearchParams(location.search).get('tv') === '1';
+    if (isTV) { document.getElementById('voiceBtn').style.display='none'; document.getElementById('fsBtn').style.display='none'; }
+
+    // Refs
+    const voiceBtn = document.getElementById('voiceBtn');
+    const fsBtn = document.getElementById('fsBtn');
+    const callTurno = document.getElementById('callTurno');
+    const callClinica = document.getElementById('callClinica');
+    const callTime = document.getElementById('callTime');
+    const kpiPend = document.getElementById('kpiPend');
+    const kpiLlam = document.getElementById('kpiLlam');
+    const kpiCons = document.getElementById('kpiCons');
+    const nextList = document.getElementById('nextList');
+    const listLlam = document.getElementById('listLlam');
+    const cntNext = document.getElementById('cntNext');
+    const cntLlam = document.getElementById('cntLlam');
+
+    // Estado de audio/voz
+    let voiceOn = true;
+    let audioCtx = null;
+    let pickedVoice = null;
+    let voicesReady = false;
+
+    // Memorias
+    let lastSpokenKey = null; // `${id}@${llamadoEn}` — evita repetir anuncios
+    let cache = [];
+
+    // ---------- Utilidades UI ----------
+    function setHero({ id, clinicaId, clinica, llamadoEn }){
+      callTurno.textContent = id ? `Turno #${id}` : '—';
+      callClinica.textContent = clinicaId ? `Clínica ${clinicaId}${clinica ? ' — '+clinica : ''}` : 'Clínica —';
+      callTime.textContent = llamadoEn ? new Date(llamadoEn).toLocaleTimeString() : (id ? 'Ahora' : '—');
+    }
+
+    const bandCls = s => s==='llamando' ? 'llam' : (s==='en_consulta' ? 'cons' : 'pend');
+    function row(t, highlight=false){
+      return `
+        <div class="row${highlight?' llamando':''}">
+          <div class="band ${bandCls(t.estado)}"></div>
+          <div class="turno-id">#${t.id}</div>
+          <div class="paciente">${t.paciente}</div>
+          <div class="clin">Clínica ${t.clinicaId}${t.clinica? ' — ' + t.clinica : ''}</div>
+        </div>
+      `;
+    }
+
+    // ---------- Audio/Voz ----------
+    async function ensureAudioUnlocked(){
+      try{
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') await audioCtx.resume().catch(()=>{});
+        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        o.type='sine'; o.frequency.value=1; g.gain.value=0.00001; o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + 0.03);
+      }catch(e){}
+    }
+    function beep(){
+      try{
+        ensureAudioUnlocked();
+        const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        audioCtx = ctx;
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(880, ctx.currentTime);
+        g.gain.setValueAtTime(0.001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+        o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.6);
+      }catch(e){}
+    }
+    function chooseBestSpanishVoice(){
+      const list = window.speechSynthesis.getVoices() || [];
+      if (!list.length) return null;
+      const preferVendors = /(Microsoft|Google)/i;
+      const preferQuality = /(Natural|Neural)/i;
+      const preferLang = /^(es|es-ES|es-MX|es-US)/i;
+      return (
+        list.find(v=> preferLang.test(v.lang||'') && preferVendors.test(v.name||'') && preferQuality.test(v.name||'')) ||
+        list.find(v=> preferLang.test(v.lang||'') && preferVendors.test(v.name||'')) ||
+        list.find(v=> /es/i.test(v.lang||'')) ||
+        list[0] || null
+      );
+    }
+    async function ensureVoicesReady(){
+      return new Promise(resolve=>{
+        const tick = ()=>{
+          const vs = speechSynthesis.getVoices();
+          if (vs && vs.length){ voicesReady = true; pickedVoice = chooseBestSpanishVoice(); resolve(true); return; }
+          setTimeout(tick, 200);
+        };
+        tick();
+      });
+    }
+    function speak(text){
+      if (!voiceOn || !text) return;
+      try{
+        const u = new SpeechSynthesisUtterance(text);
+        if (pickedVoice) u.voice = pickedVoice;
+        u.rate = 1; u.pitch = 1; u.volume = 1;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
+      }catch(e){}
+    }
+
+    // ---------- API / Render ----------
+    async function fetchAll(){
+      const res = await fetch('/api/turnos/publico/universal');
+      const data = await res.json().catch(()=>[]);
+      return Array.isArray(data) ? data : [];
+    }
+
+    function renderAll(dataAll){
+      cache = dataAll;
+
+      const totalPend = dataAll.filter(x=>x.estado==='pendiente').length;
+      const totalLlam = dataAll.filter(x=>x.estado==='llamando').length;
+      const totalCons = dataAll.filter(x=>x.estado==='en_consulta').length;
+      kpiPend.textContent = totalPend; kpiLlam.textContent = totalLlam; kpiCons.textContent = totalCons;
+
+      const llamados = dataAll.filter(x=>x.estado==='llamando').sort((a,b)=> new Date(b.llamadoEn||0) - new Date(a.llamadoEn||0));
+      const current = llamados[0] || null;
+      setHero(current || {});
+
+      const pendientes = dataAll.filter(x=>x.estado==='pendiente').slice(0, 14);
+      cntNext.textContent = pendientes.length;
+      nextList.innerHTML = pendientes.map(x => row(x)).join('') || '<div class="paciente" style="opacity:.7">Sin pendientes</div>';
+
+      const recLlam = llamados.slice(0, 14);
+      cntLlam.textContent = recLlam.length;
+      listLlam.innerHTML = recLlam.map(x => row(x, true)).join('') || '<div class="paciente" style="opacity:.7">Sin llamados</div>';
+    }
+
+    async function loadAll(){
+      const data = await fetchAll();
+      renderAll(data);
+      // 🔕 Sin voz aquí.
+    }
+
+    // Busca y anuncia por id, y ACTUALIZA HERO SIEMPRE
+    async function announceById(turnoId, intento=0){
+      const data = await fetchAll();
+      renderAll(data);
+      const t = data.find(x => Number(x.id) === Number(turnoId));
+
+      if (!t || !t.paciente){
+        if (intento < 5) setTimeout(()=> announceById(turnoId, intento+1), 300);
+        return;
+      }
+
+      // ✅ Actualiza hero en el momento
+      setHero(t);
+
+      // Anuncia evitando duplicados
+      const key = `${t.id}@${t.llamadoEn || ''}`;
+      if (key !== lastSpokenKey){
+        lastSpokenKey = key;
+        beep();
+        speak(`Paciente ${t.paciente}. Turno número ${t.id}. Favor dirigirse a Clínica ${t.clinicaId}${t.clinica? ', ' + t.clinica : ''}.`);
+      }
+    }
+
+    // ---------- Sockets ----------
+    const socket = io();
+    socket.on('turno:nuevo', loadAll);
+    socket.on('turno:estado', loadAll);     // sin voz
+
+    socket.on('turno:llamando', payload => {
+      // payload idealmente: { turnoId, clinicaId, paciente?, clinica?, llamadoEn? }
+      if (payload && payload.turnoId){
+        if (payload.paciente && payload.clinica){
+          // ✅ Actualiza hero inmediato con lo que viene del backend
+          setHero({
+            id: payload.turnoId,
+            clinicaId: payload.clinicaId,
+            clinica: payload.clinica,
+            llamadoEn: payload.llamadoEn || new Date().toISOString()
+          });
+          // Voz (evita duplicados)
+          const key = `${payload.turnoId}@${payload.llamadoEn || ''}`;
+          if (key !== lastSpokenKey){
+            lastSpokenKey = key;
+            beep();
+            speak(`Paciente ${payload.paciente}. Turno número ${payload.turnoId}. Favor dirigirse a Clínica ${payload.clinicaId}${payload.clinica? ', ' + payload.clinica : ''}.`);
+          }
+          // Refrescar listas
+          loadAll();
+        } else {
+          // Enriquecer y también actualizar hero
+          announceById(payload.turnoId);
+        }
+      } else {
+        loadAll();
+      }
+    });
+
+    // ---------- Controles ----------
+    voiceBtn.addEventListener('click', ()=>{
+      voiceOn = !voiceOn;
+      voiceBtn.textContent = 'Voz: ' + (voiceOn ? 'ON' : 'OFF');
+    });
+    fsBtn.addEventListener('click', async ()=>{
+      const el = document.documentElement;
+      if (el.requestFullscreen) await el.requestFullscreen();
+    });
+    ['click','keydown','pointerdown','touchstart','visibilitychange','focus'].forEach(ev=>{
+      window.addEventListener(ev, ensureAudioUnlocked, { passive:true });
+    });
+
+    (async function(){
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => { voicesReady = true; pickedVoice = chooseBestSpanishVoice(); };
+      }
+      await ensureAudioUnlocked();
+      voiceBtn.textContent = 'Voz: ' + (voiceOn ? 'ON' : 'OFF');
+      await loadAll();
+      if (isTV) {
+        setTimeout(()=> ensureAudioUnlocked(), 800);
+        setInterval(()=> ensureAudioUnlocked(), 5000);
+      }
+    })();
+  </script>
+</body>
+</html>

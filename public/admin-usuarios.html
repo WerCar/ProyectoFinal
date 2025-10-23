@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Admin · Usuarios</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{ --bg:#0b0f14; --text:#e6edf3; --muted:#a9b4c0; --glass:rgba(255,255,255,.06); --glass2:rgba(255,255,255,.1); --accent:#22d3ee; --primary:#4f46e5; --radius:16px }
+    *{box-sizing:border-box}
+    body{margin:0;background:#0b0f14;color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;min-height:100dvh;display:flex;flex-direction:column;
+      background: radial-gradient(1200px 800px at 10% -10%, #0e1b2a 0%, transparent 60%), radial-gradient(900px 600px at 110% 10%, #111b2f 0%, transparent 60%), linear-gradient(180deg, #0a0f17, #0b0f14);}
+    header{max-width:1200px;margin:26px auto 0;padding:0 18px;display:flex;justify-content:space-between;align-items:center}
+    .title{font-weight:800}
+    .btn{background:var(--glass);border:1px solid var(--glass2);color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer}
+    .btn:hover{background:rgba(255,255,255,.1)}
+    main{max-width:1200px;margin:20px auto;padding:0 18px;display:grid;gap:16px;grid-template-columns:1fr}
+    .card{background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:16px}
+    .row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:center}
+    .row.head{opacity:.8;font-weight:600}
+    input,select{background:var(--glass);border:1px solid rgba(255,255,255,.12);color:var(--text);padding:10px 12px;border-radius:12px;outline:none}
+    input::placeholder{color:#cbd5e1}
+    select option{ color:#0b0f14; background:#fff; }
+    .muted{color:var(--muted)}
+    .tag{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06)}
+  </style>
+</head>
+<body>
+<header>
+  <div class="title">Administrador · Usuarios</div>
+  <div>
+    <a class="btn" href="/">Inicio</a>
+    <button class="btn" id="logout">Cerrar sesión</button>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h3>Crear usuario</h3>
+    <div class="row" style="margin-top:10px">
+      <input id="nombre" placeholder="Nombre completo">
+      <input id="correo" placeholder="Correo">
+      <input id="password" placeholder="Contraseña" type="password">
+      <select id="rol">
+        <option value="recepcion">recepcion</option>
+        <option value="medico">medico</option>
+        <option value="tv">tv</option>
+        <option value="admin">admin</option>
+      </select>
+      <button class="btn" id="crear">Crear</button>
+    </div>
+    <div class="muted" style="margin-top:8px">El admin puede crear cualquier rol, incluidos usuarios de TV (solo acceso a la pantalla de TV).</div>
+  </section>
+
+  <section class="card">
+    <h3>Usuarios</h3>
+    <div class="row head" style="margin-top:10px;margin-bottom:6px">
+      <div>ID</div><div>Nombre</div><div>Correo</div><div>Rol / Activo</div><div>Acciones</div>
+    </div>
+    <div id="lista" style="display:grid;gap:10px"></div>
+  </section>
+</main>
+
+<script>
+  // Protección: solo admin
+  const token = localStorage.getItem('token');
+  const user  = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!token || !user || user.rol!=='admin'){ alert('Solo admin'); location.href='/'; }
+
+  document.getElementById('logout').onclick = ()=>{ localStorage.clear(); location.href='/'; };
+
+  async function api(url, opts={}){
+    const headers = { 'Content-Type':'application/json', ...(opts.headers||{}) };
+    headers.Authorization = 'Bearer ' + token;
+    const res = await fetch(url, { ...opts, headers });
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok) throw new Error(data.msg || 'Error');
+    return data;
+  }
+
+  async function crear(){
+    const nombre = document.getElementById('nombre').value.trim();
+    const correo = document.getElementById('correo').value.trim();
+    const password = document.getElementById('password').value;
+    const rol = document.getElementById('rol').value;
+    if (!nombre || !correo || !password) return alert('Completa todos los campos');
+    await api('/api/usuarios', { method:'POST', body: JSON.stringify({ nombre, correo, password, rol }) });
+    document.getElementById('password').value='';
+    await cargar();
+  }
+  document.getElementById('crear').onclick = crear;
+
+  function fila(u){
+    const nextRole = (u.rol === 'admin') ? 'medico' : 'admin';
+    const nextTxt  = (u.rol === 'admin') ? '→ medico' : '→ admin';
+    return `
+      <div class="row">
+        <div>#${u.id}</div>
+        <div>${u.nombre}</div>
+        <div>${u.correo}</div>
+        <div>
+          <span class="tag">${u.rol}</span>
+          <span class="tag" style="margin-left:6px;${u.activo? '':'background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.45)'}">${u.activo?'activo':'inactivo'}</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="cambiarRol(${u.id}, '${nextRole}')">Rol ${nextTxt}</button>
+          <button class="btn" onclick="toggleActivo(${u.id}, ${u.activo?0:1})">${u.activo?'Desactivar':'Activar'}</button>
+          <button class="btn" onclick="resetPass(${u.id})">Reset pass</button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function cargar(){
+    const data = await api('/api/usuarios');
+    document.getElementById('lista').innerHTML = data.map(fila).join('');
+  }
+
+  window.cambiarRol = async (id, rol) => {
+    if (!confirm(`¿Cambiar rol del usuario #${id} a "${rol}"?`)) return;
+    await api('/api/usuarios/' + id, { method:'PATCH', body: JSON.stringify({ rol }) });
+    await cargar();
+  };
+
+  window.toggleActivo = async (id, activo) => {
+    await api('/api/usuarios/' + id, { method:'PATCH', body: JSON.stringify({ activo: !!activo }) });
+    await cargar();
+  };
+
+  window.resetPass = async (id) => {
+    const password = prompt('Nueva contraseña (mínimo 6 caracteres):');
+    if (!password || password.length < 6) return alert('Contraseña inválida');
+    await api('/api/usuarios/' + id + '/reset-password', { method:'POST', body: JSON.stringify({ password }) });
+    alert('Contraseña actualizada');
+  };
+
+  cargar();
+</script>
+</body>
+</html>

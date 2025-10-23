@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Panel Médico</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{ --bg:#0b0f14; --text:#e6edf3; --muted:#a9b4c0; --primary:#4f46e5; --accent:#22d3ee;
+      --glass:rgba(255,255,255,.06); --glass-strong:rgba(255,255,255,.12); --radius:18px; --shadow: 0 10px 30px rgba(0,0,0,.35); }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:var(--text);
+      background: radial-gradient(1200px 800px at 10% -10%, #0e1b2a 0%, transparent 60%),
+                  radial-gradient(900px 600px at 110% 10%, #111b2f 0%, transparent 60%),
+                  radial-gradient(1400px 900px at 50% 120%, #0b1322 0%, transparent 60%),
+                  linear-gradient(180deg, #0a0f17, #0b0f14);
+      min-height:100dvh; display:flex; flex-direction:column;
+    }
+    header{max-width:1200px;margin:22px auto 0;padding:0 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#7c3aed);box-shadow:0 10px 30px rgba(79,70,229,.35)}
+    .title{font-weight:800}
+    .toolbar{display:flex;gap:10px;align-items:center}
+    .pill{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,rgba(36,49,77,.55),rgba(21,25,40,.55));border:1px solid rgba(255,255,255,.08);padding:10px 14px;border-radius:999px;backdrop-filter:blur(12px)}
+    .dot{width:10px;height:10px;border-radius:50%;background: radial-gradient(circle at 30% 30%, #7cffd3, #06b6d4);box-shadow:0 0 16px rgba(34,211,238,.7)}
+    .dot.off{ background: #ef4444; box-shadow: 0 0 12px rgba(239,68,68,.7) }
+    .btn, .select{
+      background:var(--glass); border:1px solid rgba(255,255,255,.12); color:var(--text);
+      padding:10px 12px; border-radius:12px; outline:none; transition:.2s; font-weight:600; cursor:pointer
+    }
+    .btn:hover{background:var(--glass-strong);transform:translateY(-1px)}
+    .btn-primary{background:linear-gradient(135deg,#6366f1,#7c3aed);border-color:transparent}
+    .btn-ok{background:linear-gradient(135deg,#0ea5e9,#10b981);border-color:transparent}
+    .btn-warn{background:linear-gradient(135deg,#f59e0b,#ef4444);border-color:transparent}
+    main{flex:1; display:grid; place-items:center; padding:20px}
+    .wrap{ width:min(1200px,96vw); display:grid; gap:20px }
+    .grid{ display:grid; grid-template-columns:1.1fr .9fr; gap:20px }
+    .card{background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .card h2{margin:0;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .content{padding:16px 18px}
+    .list{display:grid;gap:10px}
+    .item{display:grid;grid-template-columns:80px 1fr 160px 180px;gap:10px;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);padding:12px 14px;border-radius:12px;cursor:pointer;transition:.15s}
+    .item:hover{ transform: translateY(-1px) } .item.selected{ outline:2px solid var(--accent); background: rgba(34,211,238,.08) }
+    .badge{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);font-weight:700}
+    .b-llam{background:linear-gradient(135deg,#6366f1,#7c3aed);color:white;border-color:transparent}
+    .b-cons{background:linear-gradient(135deg,#0ea5e9,#10b981);color:#041015;border-color:transparent}
+    .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .muted{color:var(--muted)}
+    select, .select { color: var(--text); }
+    select option, .select option { color: #0b0f14 !important; background:#ffffff !important; }
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} .item{grid-template-columns:70px 1fr 140px 160px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <div class="title">Panel Médico</div>
+        <div class="muted" id="userInfo">—</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <a class="btn" href="/">Volver a inicio</a>
+      <select id="clinicaId" class="select" title="Clínica">
+        <option value="1">Clínica 1 — Medicina General</option>
+        <option value="2">Clínica 2 — Pediatría</option>
+        <option value="3">Clínica 3 — Ginecología</option>
+        <option value="4">Clínica 4 — Traumatología</option>
+      </select>
+      <div class="pill"><div id="dot" class="dot off"></div><span id="statusTxt">Offline</span></div>
+      <button id="logout" class="btn">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div class="grid">
+        <section class="card">
+          <h2>Cola de atención</h2>
+          <div class="content">
+            <div class="row" style="margin-bottom:12px">
+              <button id="callBtn" class="btn btn-primary">Llamar siguiente</button>
+              <button id="btnCons" class="btn btn-ok">En consulta</button>
+              <button id="btnFin" class="btn btn-primary">Finalizado</button>
+              <button id="btnAus" class="btn btn-warn">Ausente</button>
+            </div>
+            <div class="list" id="list"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Indicaciones</h2>
+          <div class="content">
+            <ul class="muted" style="margin:0;padding-left:18px;display:grid;gap:8px">
+              <li>Selecciona un turno de la lista para cambiar su estado.</li>
+              <li>“Llamar siguiente” toma el pendiente con mayor prioridad (y más antiguo).</li>
+              <li>El display universal anunciará por voz los turnos llamados.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const token = localStorage.getItem('token') || '';
+    const userInfo = document.getElementById('userInfo');
+    const dot = document.getElementById('dot'); const statusTxt = document.getElementById('statusTxt');
+    const clinicaId = document.getElementById('clinicaId');
+    const logoutBtn = document.getElementById('logout');
+    const callBtn = document.getElementById('callBtn'); const btnCons = document.getElementById('btnCons');
+    const btnFin = document.getElementById('btnFin'); const btnAus = document.getElementById('btnAus');
+    const list = document.getElementById('list');
+
+    let selectedTurnoId = null;
+    const socket = io();
+
+    if (!token || !user || !['medico','admin'].includes(user.rol)){
+      alert('Debe iniciar sesión como médico o admin');
+      location.href='/';
+    } else {
+      userInfo.textContent = `${user.nombre} — rol: ${user.rol}`;
+    }
+
+    function setOnline(on){
+      if (on){ dot.classList.remove('off'); statusTxt.textContent = 'Online — Clínica ' + clinicaId.value; }
+      else { dot.classList.add('off'); statusTxt.textContent = 'Offline'; }
+    }
+    function logout(){ localStorage.clear(); window.location.href = '/'; }
+    logoutBtn.onclick = logout;
+
+    async function api(url, opts={}){
+      const headers = { 'Content-Type':'application/json', 'Authorization': 'Bearer ' + token, ...(opts.headers||{}) };
+      const res = await fetch(url, { ...opts, headers });
+      const data = await res.json().catch(()=> ({}));
+      if (!res.ok) throw new Error(data.msg || 'Error');
+      return data;
+    }
+
+    async function cargarClinicas(){
+      try{
+        const cs = await api('/api/clinicas');
+        if (Array.isArray(cs) && cs.length){
+          clinicaId.innerHTML = cs.map(c=> `<option value="${c.id}">${c.nombre}</option>`).join('');
+        }
+      }catch(e){/* mantiene el fallback del HTML */ }
+    }
+
+    async function loadQueue(){
+      const id = Number(clinicaId.value);
+      const data = await api('/api/turnos/publico?clinicaId='+id, { method:'GET' });
+      render(data);
+    }
+
+    callBtn.onclick = async ()=> {
+      try{
+        const clinica = Number(clinicaId.value);
+        await api('/api/turnos/siguiente', { method:'POST', body: JSON.stringify({ clinicaId: clinica }) });
+        await loadQueue();
+      }catch(e){ alert(e.message); }
+    };
+
+    async function setEstado(estado){
+      if (!selectedTurnoId) return alert('Selecciona un turno.');
+      try{
+        await api('/api/turnos/' + selectedTurnoId + '/estado', { method:'PATCH', body: JSON.stringify({ estado }) });
+        await loadQueue();
+      }catch(e){ alert(e.message); }
+    }
+    btnCons.onclick = ()=> setEstado('en_consulta');
+    btnFin.onclick  = ()=> setEstado('finalizado');
+    btnAus.onclick  = ()=> setEstado('ausente');
+
+    function badge(s){
+      if(s==='llamando') return '<span class="badge b-llam">Llamando</span>';
+      if(s==='en_consulta') return '<span class="badge b-cons">En consulta</span>';
+      return '<span class="badge">Pendiente</span>';
+    }
+    function render(items){
+      list.innerHTML = items.map(x=>`
+        <div class="item ${x.id===selectedTurnoId?'selected':''}" data-id="${x.id}">
+          <div>#${x.id}</div>
+          <div>${x.paciente}</div>
+          <div>${badge(x.estado)}</div>
+          <div>${new Date(x.creadoEn).toLocaleString()}</div>
+        </div>
+      `).join('') || '<div class="muted">Sin turnos activos</div>';
+
+      for (const el of list.querySelectorAll('.item')){
+        el.addEventListener('click', ()=>{
+          selectedTurnoId = Number(el.getAttribute('data-id'));
+          list.querySelectorAll('.item').forEach(e=>e.classList.remove('selected'));
+          el.classList.add('selected');
+        });
+      }
+
+      if (!selectedTurnoId && items.length){
+        const calling = items.find(x=>x.estado==='llamando');
+        selectedTurnoId = (calling?.id) || items[0].id;
+        const pre = list.querySelector(`[data-id="${selectedTurnoId}"]`); if (pre) pre.classList.add('selected');
+      }
+    }
+
+    clinicaId.addEventListener('change', ()=>{
+      selectedTurnoId = null;
+      loadQueue();
+    });
+
+    socket.on('connect', ()=> setOnline(true));
+    socket.on('disconnect', ()=> setOnline(false));
+    socket.on('turno:llamando', (p)=> { const sel = Number(clinicaId.value); if (p && Number(p.clinicaId) === sel) loadQueue(); });
+    socket.on('turno:nuevo', loadQueue);
+    socket.on('turno:estado', loadQueue);
+
+    (async function init(){
+      await cargarClinicas();
+      await loadQueue();
+    })();
+  </script>
+</body>
+</html>
