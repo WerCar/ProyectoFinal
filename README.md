@@ -49,7 +49,7 @@ Usuario → Navegador Web → Servidor Node.js (Express)
 | /src/routes/ | Definición de rutas API REST | Define endpoints del backend. |
 | /src/middlewares/ | Validación y roles | Manejo de JWT y permisos de usuario. |
 | /public/ | Interfaz web | HTML, CSS y JS para las vistas del sistema. |
-| /sql/Consulta inicial.sql | Script SQL | Creación de tablas y datos iniciales. |
+| /sql/Consulta.sql | Script SQL | Creación de tablas y datos iniciales. |
 | .env | Variables de entorno | Configuración local (no se sube al repositorio). |
 
 ## 5. Tecnologías Utilizadas
@@ -71,7 +71,7 @@ Usuario → Navegador Web → Servidor Node.js (Express)
 | Display (TV) | Muestra los turnos activos con sonido y voz. | display.html |
 
 ## 7. Base de Datos
-El script de creación se encuentra en la carpeta /sql/Consulta inicial.sql.
+El script de creación se encuentra en la carpeta /sql/Consulta.sql.
 
 **Tablas principales:**
 - Usuarios – Almacena credenciales y roles del sistema.  
